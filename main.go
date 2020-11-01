@@ -1,5 +1,7 @@
 package main
 
 func main() {
-    getAds()
+    ads := getAds()
+    updateInflux(ads)
 }
+
