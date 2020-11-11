@@ -1,6 +1,7 @@
 package main
 
 import "log"
+import "os"
 import "sync"
 import "time"
 import "math/rand"
@@ -8,6 +9,9 @@ import "strconv"
 import "strings"
 import "net/http"
 import "github.com/PuerkitoBio/goquery"
+import "github.com/prometheus/client_golang/prometheus"
+import "github.com/prometheus/client_golang/prometheus/push"
+
 
 type Ad struct {
     Link string
@@ -19,9 +23,65 @@ type Ad struct {
     M2 int
 }
 
-// TODO: influx/prometheus
 func updateDb(ads []Ad) {
-    log.Println(ads)
+    var (
+        price = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+                Name: "price",
+                Help: "The price of the house",
+            },
+            []string{
+                "region",
+                "city",
+                "link",
+            },
+        )
+        bathrooms = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+                Name: "bathrooms",
+                Help: "The bathrooms of the house",
+            },
+            []string{
+                "region",
+                "city",
+                "link",
+            },
+        )
+        bedrooms = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+                Name: "bedrooms",
+                Help: "The bedrooms of the house",
+            },
+            []string{
+                "region",
+                "city",
+                "link",
+            },
+        )
+        m2 = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+                Name: "m2",
+                Help: "The size of the house",
+            },
+            []string{
+                "region",
+                "city",
+                "link",
+            },
+        )
+    )
+    // We use a registry here to benefit from the consistency checks that
+    // happen during registration.
+    registry := prometheus.NewRegistry()
+    registry.MustRegister(price, bathrooms, bedrooms, m2)
+    log.Println("Sending to prometheus")
+    for _, ad := range ads {
+        price.WithLabelValues(ad.Region, ad.City, ad.Link).Add(ad.Price)
+        bathrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bathrooms))
+        bedrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bedrooms))
+        m2.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.M2))
+        log.Println("sending to prometheus %s", ad)
+        err := push.New(os.Getenv("PROMETHEUS_FQDN"), "house_market").Gatherer(registry).Push()
+        if err != nil {
+            log.Fatalln(err)
+        }
+    }
 }
 
 func getGoldenHomePage(ch chan []Ad, wg *sync.WaitGroup, page int) {
@@ -54,7 +114,7 @@ func getGoldenHomePage(ch chan []Ad, wg *sync.WaitGroup, page int) {
         if (len(brokenDownAddress) == 2) {
             region = brokenDownAddress[1]
         }
-        price, _ := strconv.ParseFloat(strings.Split(item.Find(".price").Text(), " €")[0], 64)
+        price, _ := strconv.ParseFloat(strings.Replace(strings.Split(item.Find(".price").Text(), " €")[0], ".", "", -1), 64)
         m2, _ := strconv.Atoi(strings.Split(strings.TrimSpace(item.Find(".amenities .pull-left").Text())[8:], " ")[0])
         var bedroomsAndBathrooms [2]int
         item.Find(".amenities .pull-right li").Each(func(index int, item *goquery.Selection){
@@ -79,7 +139,7 @@ func getAds() []Ad {
     var wg sync.WaitGroup
     var results []Ad
     ch := make(chan []Ad)
-    for i := 1; i < 3000; i++ {
+    for i := 1; i < 40; i++ {
         wg.Add(1)
         go getGoldenHomePage(ch, &wg, i)
 	}
