@@ -3,9 +3,9 @@ WORKDIR /src
 RUN apk update && apk add --no-cache git
 COPY . .
 RUN go get -d -v
-RUN go build -o /out/house_market .
+RUN go build -o /out/real_estate .
 
 FROM alpine
-COPY --from=build /out/house_market /bin/house_market
+COPY --from=build /out/real_estate /bin/real_estate
 
 ENTRYPOINT /bin/house_market

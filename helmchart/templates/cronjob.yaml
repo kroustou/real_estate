@@ -1,0 +1,17 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: real_estate
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: real_estate
+            image: real_estate
+            env:
+              - name: PROMETHEUS_FQDN
+                value: http://prometheus-1604862072-pushgateway.prometheus.svc:9091
+          restartPolicy: OnFailure
