@@ -1,11 +1,30 @@
-FROM golang:1.14.3-alpine AS build
-WORKDIR /src
+FROM golang:alpine AS builder
+
+ENV GOPATH=/
 RUN apk update && apk add --no-cache git
+
+COPY go.mod .
+COPY go.sum .
+
+RUN env
+RUN go mod download
+
 COPY . .
-RUN go get -d -v
-RUN go build -o /out/real_estate .
 
-FROM alpine
-COPY --from=build /out/real_estate /bin/real_estate
+ENV CGO_ENABLED=0
+# mac
+RUN go build -o /go/bin/real_estate-mac
+RUN chmod +x /go/bin/real_estate-mac
+# arm
+RUN GOOS=linux GOARCH=arm GOARM=5 go build -ldflags="-w -s" -o /go/bin/real_estate-arm
+RUN chmod +x /go/bin/real_estate-arm
 
-ENTRYPOINT /bin/house_market
+FROM scratch as mac
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /go/bin/real_estate-mac /go/bin/real_estate
+
+FROM scratch as arm
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /go/bin/real_estate-arm /go/bin/real_estate
+
+ENTRYPOINT ["/go/bin/real_estate"]
