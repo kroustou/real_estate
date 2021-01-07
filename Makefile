@@ -4,6 +4,3 @@ build:
 
 run:
 	docker run -it --env PROMETHEUS_FQDN="http://host.docker.internal:9091" --network host raspberrypi.local:5000/real_estate:mac /go/bin/real_estate
-
-push:
-    docker push raspberrypi.local:5000/real_estate:arm
