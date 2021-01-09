@@ -3,8 +3,9 @@ image:
   repo: raspberrypi.local:5000
   name: real_estate
   tag: arm
-  digest: "@sha256:697ac8810945f4df5361290f1d21f8878fb606cf3c1c5c156b4c582ede394940"
+  digest: "@sha256:1ae3b43e82f32e7cfd778d3db8d4fa25d10fa21eac13993163748e52171220f1"
 
+pages: 3000
 cron_schedule: "0 */6 * * *"
 
 prometheus:

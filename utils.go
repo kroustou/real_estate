@@ -1,6 +1,5 @@
 // TODO:
 // - max 10 requests at the same time
-// - update prometheus without processing async
 // - Get more ad details - probably
 
 package main
@@ -86,31 +85,29 @@ func updateDb(ads []Ad) {
         err := push.New(os.Getenv("PROMETHEUS_FQDN"), "house_market").Gatherer(registry).Push()
         if err != nil {
             log.Fatalln(err)
-        }
-    }
+        }}
     log.Println("Done")
 }
 
-func getGoldenHomePage(page int) {
+func getGoldenHomePage(page int) []Ad {
     log.Printf("Getting page %s...", page)
     query := "https://goldenhome.gr/property/index?PropertySearch%5BPropertyID%5D=&PropertySearch%5BTrnTypeID%5D=2&PropertySearch%5Bvideo_url%5D=&PropertySearch%5BPropCategID%5D=11704&category=&PropertySearch%5BPropSubCategID%5D=&PropertySearch%5BareaLevel1%5D=&PropertySearch%5BRAreaID%5D=&PropertySearch%5BFloorNo%5D=&PropertySearch%5BFloorNo_to%5D=&PropertySearch%5BBuiltYear%5D=1981&PropertySearch%5BBuiltYear_to%5D=&PropertySearch%5BTotalRooms%5D=&PropertySearch%5BTotalRooms_to%5D=&PropertySearch%5BTotalParkings%5D=&PropertySearch%5BTotalParkings_to%5D=&PropertySearch%5BAskedValue%5D=&PropertySearch%5BAskedValue_to%5D=&PropertySearch%5BTotalSm%5D=100&PropertySearch%5BTotalSm_to%5D=&PropertySearch%5Bapothiki%5D=&PropertySearch%5Btzaki%5D=&page=" + strconv.Itoa(page)
     client := &http.Client{}
     req, err := http.NewRequest("GET", query, nil)
     if err != nil {
         log.Println(err)
-        return
     }
     req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:77.0) Gecko/20100101 Firefox/77.0")
     resp, err := client.Do(req)
     if err != nil {
         log.Fatalln(err)
     }
-    var response []Ad
     defer resp.Body.Close()
     doc, err := goquery.NewDocumentFromReader(resp.Body)
     if err != nil {
         log.Fatalln(err)
     }
+    var response []Ad
     doc.Find(".pgl-property").Each(func(index int, item *goquery.Selection) {
         link, _ := item.Find("a").Attr("href")
         address, _ := item.Find("address").Html()
@@ -138,13 +135,19 @@ func getGoldenHomePage(page int) {
             M2: m2,
         })
     })
-    updateDb(response)
-    return
+    log.Println("got %s", len(response))
+    return response
 }
 
-func getAds() {
-    for i := 1; i < 3000; i++ {
-        getGoldenHomePage(i)
+func getAds(pages int) {
+    var ads []Ad
+    for i := 1; i < pages; i++ {
+        log.Println("page %s", i)
+        response := getGoldenHomePage(i)
+        for r := 0; r < len(response); r++ {
+            ads = append(ads, response[r])
+        }
 	}
-    return
+    log.Println(ads)
+    updateDb(ads)
 }
