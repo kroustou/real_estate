@@ -1,10 +1,11 @@
 // TODO:
-// - max 10 requests at the same time
-// - Get more ad details - probably
+// - log house type
+// - multiple queries, tailored to our needs
 
 package main
 
 import "log"
+import "fmt"
 import "os"
 import "strconv"
 import "strings"
@@ -27,7 +28,7 @@ type Ad struct {
 func updateDb(ads []Ad) {
     var (
         price = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-                Name: "price",
+                Name: "real_estate_price",
                 Help: "The price of the house",
             },
             []string{
@@ -40,7 +41,7 @@ func updateDb(ads []Ad) {
             },
         )
         bathrooms = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-                Name: "bathrooms",
+                Name: "real_estate_bathrooms",
                 Help: "The bathrooms of the house",
             },
             []string{
@@ -50,18 +51,17 @@ func updateDb(ads []Ad) {
             },
         )
         bedrooms = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-                Name: "bedrooms",
+                Name: "real_estate_bedrooms",
                 Help: "The bedrooms of the house",
             },
             []string{
                 "region",
-
                 "city",
                 "link",
             },
         )
         m2 = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-                Name: "m2",
+                Name: "real_estate_m2",
                 Help: "The size of the house",
             },
             []string{
@@ -82,18 +82,19 @@ func updateDb(ads []Ad) {
         bedrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bedrooms))
         m2.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.M2))
         log.Println("sending to prometheus %s", ad)
-        err := push.New(os.Getenv("PROMETHEUS_FQDN"), "house_market").Gatherer(registry).Push()
-        if err != nil {
-            log.Fatalln(err)
-        }}
+    }
+    err := push.New(os.Getenv("PROMETHEUS_FQDN"), "house_market").Gatherer(registry).Push()
+    if err != nil {
+        log.Fatalln(err)
+    }
     log.Println("Done")
 }
 
-func getGoldenHomePage(page int) []Ad {
+func getGoldenHomePage(page int, query string) []Ad {
     log.Printf("Getting page %s...", page)
-    query := "https://goldenhome.gr/property/index?PropertySearch%5BPropertyID%5D=&PropertySearch%5BTrnTypeID%5D=2&PropertySearch%5Bvideo_url%5D=&PropertySearch%5BPropCategID%5D=11704&category=&PropertySearch%5BPropSubCategID%5D=&PropertySearch%5BareaLevel1%5D=&PropertySearch%5BRAreaID%5D=&PropertySearch%5BFloorNo%5D=&PropertySearch%5BFloorNo_to%5D=&PropertySearch%5BBuiltYear%5D=1981&PropertySearch%5BBuiltYear_to%5D=&PropertySearch%5BTotalRooms%5D=&PropertySearch%5BTotalRooms_to%5D=&PropertySearch%5BTotalParkings%5D=&PropertySearch%5BTotalParkings_to%5D=&PropertySearch%5BAskedValue%5D=&PropertySearch%5BAskedValue_to%5D=&PropertySearch%5BTotalSm%5D=100&PropertySearch%5BTotalSm_to%5D=&PropertySearch%5Bapothiki%5D=&PropertySearch%5Btzaki%5D=&page=" + strconv.Itoa(page)
+    var response []Ad
     client := &http.Client{}
-    req, err := http.NewRequest("GET", query, nil)
+    req, err := http.NewRequest("GET", fmt.Sprintf("%s&page=%d", query, page), nil)
     if err != nil {
         log.Println(err)
     }
@@ -107,7 +108,6 @@ func getGoldenHomePage(page int) []Ad {
     if err != nil {
         log.Fatalln(err)
     }
-    var response []Ad
     doc.Find(".pgl-property").Each(func(index int, item *goquery.Selection) {
         link, _ := item.Find("a").Attr("href")
         address, _ := item.Find("address").Html()
@@ -139,15 +139,33 @@ func getGoldenHomePage(page int) []Ad {
     return response
 }
 
-func getAds(pages int) {
+
+func getAds(queries []string) {
     var ads []Ad
-    for i := 1; i < pages; i++ {
-        log.Println("page %s", i)
-        response := getGoldenHomePage(i)
-        for r := 0; r < len(response); r++ {
-            ads = append(ads, response[r])
+    log.Println("Getting data")
+    for _, query := range queries {
+        log.Println("query %s", query)
+        var getNext bool = true
+        page := 1
+        for getNext {
+            response := getGoldenHomePage(page, query)
+            page += 1
+            for r := 0; r < len(response); r++ {
+                // if item already in list, stop
+                for _, ad := range ads {
+                    if ad.Link == response[r].Link {
+                        getNext = false
+                        break;
+                    }
+                }
+                if getNext {
+                    ads = append(ads, response[r])
+                } else {
+                    break
+                }
+            }
         }
-	}
-    log.Println(ads)
+        log.Println(ads)
+    }
     updateDb(ads)
 }
