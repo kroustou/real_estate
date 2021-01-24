@@ -3,9 +3,14 @@ image:
   repo: raspberrypi.local:5000
   name: real_estate
   tag: arm
-  digest: "@sha256:f39953d8a515ce6d5c470ae1827082edabb859a488dee6ccd47c6ea2c375a0c3"
+  digest: "sha256:744c6280a8dd9675d0a886ac9c4da72d3866def2acb141f3294ed253021ba5e1"
 
 cron_schedule: "0 */12 * * *"
+
+queries:
+  - https://goldenhome.gr/property/index?PropertySearch%5BPropertyID%5D=&PropertySearch%5BTrnTypeID%5D=2&PropertySearch%5Bvideo_url%5D=&PropertySearch%5BPropCategID%5D=11704&category=&PropertySearch%5BPropSubCategID%5D=&PropertySearch%5BareaLevel1%5D=101000000&PropertySearch%5BRAreaID%5D=&PropertySearch%5BFloorNo%5D=&PropertySearch%5BFloorNo_to%5D=&PropertySearch%5BBuiltYear%5D=&PropertySearch%5BBuiltYear_to%5D=&PropertySearch%5BTotalRooms%5D=2&PropertySearch%5BTotalRooms_to%5D=5&PropertySearch%5BTotalParkings%5D=&PropertySearch%5BTotalParkings_to%5D=2&PropertySearch%5BAskedValue%5D=&PropertySearch%5BAskedValue_to%5D=1000000&PropertySearch%5BTotalSm%5D=80&PropertySearch%5BTotalSm_to%5D=&PropertySearch%5Bapothiki%5D=&PropertySearch%5Btzaki%5D=
+  - https://goldenhome.gr/property/index?PropertySearch%5BPropertyID%5D=&PropertySearch%5BTrnTypeID%5D=2&PropertySearch%5Bvideo_url%5D=&PropertySearch%5BPropCategID%5D=11704&PropertySearch%5BPropSubCategID%5D=&PropertySearch%5BareaLevel1%5D=102000000&PropertySearch%5BRAreaID%5D=&PropertySearch%5BFloorNo%5D=&PropertySearch%5BFloorNo_to%5D=&PropertySearch%5BBuiltYear%5D=&PropertySearch%5BBuiltYear_to%5D=&PropertySearch%5BTotalRooms%5D=2&PropertySearch%5BTotalRooms_to%5D=5&PropertySearch%5BTotalParkings%5D=&PropertySearch%5BTotalParkings_to%5D=2&PropertySearch%5BAskedValue%5D=&PropertySearch%5BAskedValue_to%5D=1000000&PropertySearch%5BTotalSm%5D=80&PropertySearch%5BTotalSm_to%5D=&PropertySearch%5Bapothiki%5D=&PropertySearch%5Btzaki%5D=&category=
+  - https://goldenhome.gr/property/index?PropertySearch%5BPropertyID%5D=&PropertySearch%5BTrnTypeID%5D=2&PropertySearch%5Bvideo_url%5D=&PropertySearch%5BPropCategID%5D=11704&category=&PropertySearch%5BPropSubCategID%5D=&PropertySearch%5BareaLevel1%5D=104000000&PropertySearch%5BRAreaID%5D=&PropertySearch%5BFloorNo%5D=&PropertySearch%5BFloorNo_to%5D=&PropertySearch%5BBuiltYear%5D=&PropertySearch%5BBuiltYear_to%5D=&PropertySearch%5BTotalRooms%5D=2&PropertySearch%5BTotalRooms_to%5D=5&PropertySearch%5BTotalParkings%5D=&PropertySearch%5BTotalParkings_to%5D=2&PropertySearch%5BAskedValue%5D=&PropertySearch%5BAskedValue_to%5D=1000000&PropertySearch%5BTotalSm%5D=80&PropertySearch%5BTotalSm_to%5D=&PropertySearch%5Bapothiki%5D=&PropertySearch%5Btzaki%5D=
 
 prometheus:
   server:

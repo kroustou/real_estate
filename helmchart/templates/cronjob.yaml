@@ -16,6 +16,8 @@ spec:
             env:
               - name: PROMETHEUS_FQDN
                 value: http://real-estate-prometheus-pushgateway.{{ .Release.Namespace }}.svc:9091
+              - name: QUERIES
+                value: {{ range $index, $element := .Values.queries }}{{if $index}},{{end}}{{$element}}{{ end }}
             resources:
               limits:
                 cpu: 1000m
