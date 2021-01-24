@@ -3,14 +3,14 @@ image:
   repo: raspberrypi.local:5000
   name: real_estate
   tag: arm
-  digest: "@sha256:d75be328cd0a50a5cb0ba682d4e7f96affba375054fb4250335d5e1f4feae373"
+  digest: "@sha256:f39953d8a515ce6d5c470ae1827082edabb859a488dee6ccd47c6ea2c375a0c3"
 
 cron_schedule: "0 */12 * * *"
 
 prometheus:
-  service:
-    retention: "5y"
   server:
+    service:
+      retention: "5y"
     extraFlags:
       - web.enable-lifecycle
       - web.enable-admin-api
