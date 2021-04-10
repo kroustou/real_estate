@@ -13,13 +13,17 @@ There is a helmchart available in the repository. One can install it by using `h
 Add more sites, due to google recaptcha protection it was not possible to fetch data from xe.gr, spitogatos.gr.
 Facebook probably has similar issues.
 
-- [X] provide any queries throught he environment
-- [ ] set up alerts 
+### Dashboard
+- [x] Create dropdown to select multiple regions
+- [x] price/m2
+- [x] Show the first and last price on best deals
+- [ ] Show the avg time an ad is online and the price difference
+
+### TODO
+- [x] provide any queries throught he environment
+- [ ] set up alerts on new ads
 - [ ] provide grafana dashboard configmap 
-- [ ] write tests (due to the limited time i have right now i decided to start with something that would create graphs and then worry about testing)
+- [ ] provide alerts
+- [ ] write tests (due to the limited time i have right now i decided to start with something that would start saving data and then worry abou testing
 - [ ] add more sources
 
-### Dashboard
-- [ ] Create dropdown to select multiple regions
-- [ ] Create price range selection
-- [ ] Show the last price in ads that do not exist anymore
