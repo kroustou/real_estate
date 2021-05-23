@@ -23,8 +23,7 @@ FROM scratch as mac
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/real_estate-mac /go/bin/real_estate
 
-FROM scratch as arm
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+FROM mac as arm
 COPY --from=builder /go/bin/real_estate-arm /go/bin/real_estate
 
 ENTRYPOINT ["/go/bin/real_estate"]

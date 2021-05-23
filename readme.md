@@ -16,14 +16,17 @@ Facebook probably has similar issues.
 ### Dashboard
 - [x] Create dropdown to select multiple regions
 - [x] price/m2
-- [x] Show the first and last price on best deals
+- [ ] Show the first and last price on best deals
 - [ ] Show the avg time an ad is online and the price difference
 
 ### TODO
-- [x] provide any queries throught he environment
+- [x] provide any queries throught the environment
+- [ ] write tests (due to the limited time i have right now i decided to start with something that would start saving data and then worry abou testing
 - [ ] set up alerts on new ads
 - [ ] provide grafana dashboard configmap 
-- [ ] provide alerts
-- [ ] write tests (due to the limited time i have right now i decided to start with something that would start saving data and then worry abou testing
+- [ ] provide alerts config
+- [ ] refactor utils into a struct and rename
+- [ ] concurrent queries with chains
 - [ ] add more sources
+- [ ] create a pipeline on github
 

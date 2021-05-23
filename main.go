@@ -6,6 +6,6 @@ import "strings"
 
 func main() {
     queries := strings.Split(os.Getenv("QUERIES"), ",")
-    log.Println("getting queries: %s", queries)
+    log.Println("getting queries: ", queries)
     getAds(queries)
 }

@@ -1,7 +1,3 @@
-// TODO:
-// - log house type
-// - multiple queries, tailored to our needs
-
 package main
 
 import "log"
@@ -81,7 +77,7 @@ func updateDb(ads []Ad) {
         bathrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bathrooms))
         bedrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bedrooms))
         m2.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.M2))
-        log.Println("sending to prometheus %s", ad)
+        log.Println("sending to prometheus", ad)
     }
     err := push.New(os.Getenv("PROMETHEUS_FQDN"), "house_market").Gatherer(registry).Push()
     if err != nil {
@@ -91,14 +87,14 @@ func updateDb(ads []Ad) {
 }
 
 func getGoldenHomePage(page int, query string) []Ad {
-    log.Printf("Getting page %s...", page)
+    log.Printf("Getting page %d...", page)
     var response []Ad
     client := &http.Client{}
     req, err := http.NewRequest("GET", fmt.Sprintf("%s&page=%d", query, page), nil)
     if err != nil {
         log.Println(err)
     }
-    req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:77.0) Gecko/20100101 Firefox/77.0")
+    req.Header.Set("User-Agent", "real_estate bot")
     resp, err := client.Do(req)
     if err != nil {
         log.Fatalln(err)
@@ -135,7 +131,7 @@ func getGoldenHomePage(page int, query string) []Ad {
             M2: m2,
         })
     })
-    log.Println("got %s", len(response))
+    log.Println("Got ", len(response))
     return response
 }
 
@@ -144,7 +140,7 @@ func getAds(queries []string) {
     var ads []Ad
     log.Println("Getting data")
     for _, query := range queries {
-        log.Println("query %s", query)
+        log.Println("query", query)
         var getNext bool = true
         page := 1
         for getNext {
@@ -167,5 +163,7 @@ func getAds(queries []string) {
         }
         log.Println(ads)
     }
-    updateDb(ads)
+    if len(ads) > 0 {
+        updateDb(ads)
+    }
 }
