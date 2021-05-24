@@ -3,13 +3,13 @@ FROM golang:alpine AS builder
 ENV GOPATH=/
 RUN apk update && apk add --no-cache git
 
-COPY go.mod .
-COPY go.sum .
+COPY ./cmd/real_estate/go.mod .
+COPY ./cmd/real_estate/go.sum .
 
 RUN env
 RUN go mod download
 
-COPY . .
+COPY ./cmd/real_estate .
 
 ENV CGO_ENABLED=0
 # mac
