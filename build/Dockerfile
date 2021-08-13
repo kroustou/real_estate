@@ -12,9 +12,11 @@ RUN go mod download
 COPY ./cmd/real_estate .
 
 ENV CGO_ENABLED=0
+
 # mac
 RUN go build -o /go/bin/real_estate-mac
 RUN chmod +x /go/bin/real_estate-mac
+
 # arm
 RUN GOOS=linux GOARCH=arm GOARM=5 go build -ldflags="-w -s" -o /go/bin/real_estate-arm
 RUN chmod +x /go/bin/real_estate-arm

@@ -1,14 +1,16 @@
 package main
 
-import "log"
-import "fmt"
-import "os"
-import "strconv"
-import "strings"
-import "net/http"
-import "github.com/PuerkitoBio/goquery"
-import "github.com/prometheus/client_golang/prometheus"
-import "github.com/prometheus/client_golang/prometheus/push"
+import (
+    "log"
+    "fmt"
+    "os"
+    "strconv"
+    "strings"
+    "net/http"
+    "github.com/PuerkitoBio/goquery"
+    "github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus/push"
+)
 
 
 type Ad struct {
@@ -21,7 +23,12 @@ type Ad struct {
     M2 int
 }
 
-func updateDb(ads []Ad) {
+type AdGetter struct {
+    ads []Ad
+    prometheusUrl string
+}
+
+func (ag *AdGetter) updateDb() {
     var (
         price = prometheus.NewGaugeVec(prometheus.GaugeOpts{
                 Name: "real_estate_price",
@@ -71,8 +78,8 @@ func updateDb(ads []Ad) {
     // happen during registration.
     registry := prometheus.NewRegistry()
     registry.MustRegister(price, bathrooms, bedrooms, m2)
-    log.Println("Sending to prometheus")
-    for _, ad := range ads {
+    log.Println("Sending to prometheus...")
+    for _, ad := range ag.ads {
         price.WithLabelValues(ad.Region, ad.City, ad.Link, strconv.Itoa(ad.Bathrooms), strconv.Itoa(ad.Bedrooms), strconv.Itoa(ad.M2)).Add(ad.Price)
         bathrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bathrooms))
         bedrooms.WithLabelValues(ad.Region, ad.City, ad.Link).Add(float64(ad.Bedrooms))
@@ -86,13 +93,14 @@ func updateDb(ads []Ad) {
     log.Println("Done")
 }
 
-func getGoldenHomePage(page int, query string) []Ad {
+
+func (ag *AdGetter) getGoldenHomePage(page int, query string) []Ad {
     log.Printf("Getting page %d...", page)
     var response []Ad
     client := &http.Client{}
     req, err := http.NewRequest("GET", fmt.Sprintf("%s&page=%d", query, page), nil)
     if err != nil {
-        log.Println(err)
+        log.Fatalln(err)
     }
     req.Header.Set("User-Agent", "real_estate bot")
     resp, err := client.Do(req)
@@ -136,34 +144,34 @@ func getGoldenHomePage(page int, query string) []Ad {
 }
 
 
-func getAds(queries []string) {
-    var ads []Ad
+func (ag *AdGetter) getAds(queries []string) {
     log.Println("Getting data")
     for _, query := range queries {
         log.Println("query", query)
+        // a flag on whether we should fetch the next page
+        // goldenhome will return the last page as soon as you have exceeded the pages
+        // and since the pagination relies on infinite scrolling there is no other way to see
+        // whether we have reached the end
         var getNext bool = true
+        var lastLink string
         page := 1
         for getNext {
-            response := getGoldenHomePage(page, query)
+            response := ag.getGoldenHomePage(page, query)
             page += 1
+            // We just fetched a page that has been already stored
+            if lastLink == response[len(response)-1].Link {
+                break
+            }
+            // else we need to add the new items
+            lastLink = response[len(response)-1].Link
             for r := 0; r < len(response); r++ {
                 // if item already in list, stop
-                for _, ad := range ads {
-                    if ad.Link == response[r].Link {
-                        getNext = false
-                        break;
-                    }
-                }
-                if getNext {
-                    ads = append(ads, response[r])
-                } else {
-                    break
-                }
+                ag.ads = append(ag.ads, response...)
             }
         }
-        log.Println(ads)
+        log.Println(ag.ads)
     }
-    if len(ads) > 0 {
-        updateDb(ads)
+    if len(ag.ads) > 0 {
+        ag.updateDb()
     }
 }
